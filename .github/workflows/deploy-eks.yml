@@ -1,5 +1,4 @@
 name: CI/CD to EKS
-
 on:
   push:
     branches:
@@ -15,38 +14,42 @@ env:
   EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
   AWS_REGION: us-east-1
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
 
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         aws-region: ${{ env.AWS_REGION }}
+        mask-aws-account-id: true
 
-    - name: Log in to Amazon ECR
+    - name: Login to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
+      
+    - name: Build and push Docker image
+      env:
+        DOCKER_IMAGE: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+      run: |
+        docker build -t $DOCKER_IMAGE .
+        docker push $DOCKER_IMAGE
 
     - name: Update kube config
-      run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
-
-    - name: Verify kubeconfig
-      run: cat ~/.kube/config
-
-    - name: Check kubectl context
-      run: kubectl config current-context
+      run: |
+        aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
     - name: Deploy to EKS
       env:
-        DOCKER_IMAGE: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}  
+        DOCKER_IMAGE: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
       run: |
-        # Atualiza o manifesto com a imagem do ECR
         sed -i.bak "s|DOCKER_IMAGE|$DOCKER_IMAGE|g" EKS/deployment.yaml
-        kubectl apply -f EKS/deployment.yaml --validate=false
-        kubectl apply -f EKS/service.yaml --validate=false
+        kubectl apply -f EKS/deployment.yaml
+        kubectl apply -f EKS/service.yaml

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: loomi-api
-        image: {{DOCKER_IMAGE}}  
+        image: DOCKER_IMAGE
         env:
         - name: DATABASE_URL
           valueFrom:

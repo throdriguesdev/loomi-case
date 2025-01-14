@@ -1,4 +1,4 @@
-name: CI/CD to EKS
+name: Deploy to EKS
 on:
   push:
     branches:
@@ -14,12 +14,8 @@ env:
   EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
   AWS_REGION: us-east-1
 
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -32,19 +28,10 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Login to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
-      
-    - name: Build and push Docker image
-      env:
-        DOCKER_IMAGE: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-      run: |
-        docker build -t $DOCKER_IMAGE .
-        docker push $DOCKER_IMAGE
-
     - name: Update kube config
       run: |
         aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+        kubectl config current-context
 
     - name: Deploy to EKS
       env:

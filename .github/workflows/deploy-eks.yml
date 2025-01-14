@@ -3,45 +3,53 @@ name: CI/CD to EKS
 on:
   push:
     branches:
-    - main
+      - main
   pull_request:
     branches:
-    - main
+      - main
+
+env:
+  AWS_REGION: us-east-1  
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
 
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
 
-    - name: Log in to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
-    # build e push da imagem pro ecr
-    - name: Build and push Docker image to ECR
-      env:
-        ECR_REGISTRY: 063674011189.dkr.ecr.us-east-1.amazonaws.com
-        ECR_REPOSITORY: infra/loomi-api
-        IMAGE_TAG: latest
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-    #  kubectl para acessar > eks
-    - name: Set up kubectl for EKS
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: us-east-1
-      run: |
-        aws eks update-kubeconfig --name <cluster-name> --region $AWS_DEFAULT_REGION
 
-    # aplicar deployment e service no eks
-    - name: Apply Kubernetes manifests
-      run: |
-        kubectl apply -f deployment.yaml
-        kubectl apply -f service.yaml
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+
+      - name: Build and push Docker image to ECR
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+
+      - name: Set up kubectl for EKS
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+        run: |
+          aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region $AWS_DEFAULT_REGION
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml

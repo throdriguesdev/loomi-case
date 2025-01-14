@@ -36,6 +36,12 @@ jobs:
     - name: Update kube config
       run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
+    - name: Verify kubeconfig
+      run: cat ~/.kube/config
+
+    - name: Check kubectl context
+      run: kubectl config current-context
+
     - name: Deploy to EKS
       env:
         DOCKER_IMAGE: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}  

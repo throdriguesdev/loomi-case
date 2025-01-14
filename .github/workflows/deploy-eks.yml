@@ -42,5 +42,5 @@ jobs:
       run: |
         # Atualiza o manifesto com a imagem do ECR
         sed -i.bak "s|${DOCKER_IMAGE}|$DOCKER_IMAGE|g" EKS/hello-app-deployment.yaml
-        kubectl apply -f EKS/hello-app-deployment.yaml
-        kubectl apply -f EKS/hello-app-service.yaml
+        kubectl apply -f EKS/deployment.yaml
+        kubectl apply -f EKS/service.yaml

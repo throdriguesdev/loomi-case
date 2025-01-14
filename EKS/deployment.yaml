@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: loomi-api
-        image: DOCKER_IMAGE
+        image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/infra/loomi-api:latest
         env:
         - name: DATABASE_URL
           valueFrom:
@@ -24,4 +24,4 @@ spec:
         ports:
         - containerPort: 8000
       imagePullSecrets:
-        - name: ecr-registry-secret  
+        - name: ecr-registry-secret

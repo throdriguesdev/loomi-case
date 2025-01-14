@@ -37,8 +37,10 @@ jobs:
       run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
     - name: Deploy to EKS
+      env:
+        DOCKER_IMAGE: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}  
       run: |
         # Atualiza o manifesto com a imagem do ECR
-        sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|g" manifests/hello-app-deployment.yaml
-        kubectl apply -f manifests/hello-app-deployment.yaml
-        kubectl apply -f manifests/hello-app-service.yaml
+        sed -i.bak "s|${DOCKER_IMAGE}|$DOCKER_IMAGE|g" EKS/hello-app-deployment.yaml
+        kubectl apply -f EKS/hello-app-deployment.yaml
+        kubectl apply -f EKS/hello-app-service.yaml

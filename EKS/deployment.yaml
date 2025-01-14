@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: loomi-api
-        image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/infra/loomi-api:latest
+        image: 063674011189.dkr.ecr.us-east-1.amazonaws.com/infra/loomi-api
         env:
         - name: DATABASE_URL
           valueFrom:

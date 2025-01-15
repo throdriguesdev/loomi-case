@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: loomi-api
+  annotations:
+    kubernetes.io/change-cause: "Testing rolling update strategy - v1"
 spec:
   replicas: 2
   strategy:

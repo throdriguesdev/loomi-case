@@ -10,7 +10,7 @@ spec:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 1   # Permite mais pods indisponíveis durante a atualização (ajuste conforme a necessidade)
+      maxUnavailable: 1   
   selector:
     matchLabels:
       app: loomi-api

@@ -4,6 +4,11 @@ metadata:
   name: loomi-api
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: loomi-api
@@ -15,6 +20,13 @@ spec:
       containers:
       - name: loomi-api
         image: 063674011189.dkr.ecr.us-east-1.amazonaws.com/infra/loomi-api
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
         env:
         - name: DATABASE_URL
           valueFrom:
@@ -24,4 +36,4 @@ spec:
         ports:
         - containerPort: 8000
       imagePullSecrets:
-        - name: ecr-registry-secret
+      - name: ecr-registry-secret

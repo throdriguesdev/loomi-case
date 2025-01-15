@@ -3,14 +3,14 @@ kind: Deployment
 metadata:
   name: loomi-api
   annotations:
-    kubernetes.io/change-cause: "Testing rolling update strategy - v1"
+    kubernetes.io/change-cause: "Updated deployment with probes and resource limits"
 spec:
   replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 0
+      maxUnavailable: 1   # Permite mais pods indisponíveis durante a atualização (ajuste conforme a necessidade)
   selector:
     matchLabels:
       app: loomi-api
@@ -19,7 +19,7 @@ spec:
       labels:
         app: loomi-api
       annotations:
-        rollme: "v1"  
+        rollme: "v2" 
     spec:
       containers:
       - name: loomi-api
@@ -39,5 +39,21 @@ spec:
               key: DATABASE_URL
         ports:
         - containerPort: 8000
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
       imagePullSecrets:
       - name: ecr-registry-secret
